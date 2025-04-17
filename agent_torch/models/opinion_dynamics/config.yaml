@@ -1,0 +1,111 @@
+simulation_metadata:
+  device: "cpu"
+  num_episodes: 1
+  num_steps_per_episode: 52  # One year of weekly updates
+  num_substeps_per_step: 1
+  population_file: "data/population.pkl"
+
+state:
+  environment:
+    global_adoption_rate:
+      name: "Global Adoption Rate"
+      learnable: false
+      shape: 1
+      dtype: "float"
+      value: 0.0
+      initialization_function: null
+    
+    time:
+      name: "Time Step"
+      learnable: false
+      shape: 1
+      dtype: "int"
+      value: 0
+      initialization_function: null
+
+  agents:
+    citizens:
+      opinion:
+        name: "Opinion"
+        learnable: false
+        shape: null  # Will be set based on population size
+        dtype: "float"
+        value: null
+        initialization_function: "random_float"
+      
+      previous_opinion:
+        name: "Previous Opinion"
+        learnable: false
+        shape: null  # Will be set based on population size
+        dtype: "float"
+        value: null
+        initialization_function: "random_float"
+      
+      household:
+        name: "Household ID"
+        learnable: false
+        shape: null  # Will be set based on population size
+        dtype: "int"
+        value: null
+        initialization_function: "read_from_file"
+        initialization_params:
+          file_path: "${simulation_metadata.population_file}"
+          column: "household"
+      
+      age:
+        name: "Age"
+        learnable: false
+        shape: null  # Will be set based on population size
+        dtype: "int"
+        value: null
+        initialization_function: "read_from_file"
+        initialization_params:
+          file_path: "${simulation_metadata.population_file}"
+          column: "age"
+      
+      gender:
+        name: "Gender"
+        learnable: false
+        shape: null  # Will be set based on population size
+        dtype: "int"
+        value: null
+        initialization_function: "read_from_file"
+        initialization_params:
+          file_path: "${simulation_metadata.population_file}"
+          column: "gender"
+      
+      ethnicity:
+        name: "Ethnicity"
+        learnable: false
+        shape: null  # Will be set based on population size
+        dtype: "int"
+        value: null
+        initialization_function: "read_from_file"
+        initialization_params:
+          file_path: "${simulation_metadata.population_file}"
+          column: "ethnicity"
+
+  network:
+    household:
+      name: "Household Network"
+      type: "household_network"
+      params:
+        population_file: "${simulation_metadata.population_file}"
+
+substeps:
+  opinion_update:
+    agents: ["citizens"]
+    observation:
+      function: "GetCurrentState"
+      input_vars: ["opinion", "previous_opinion", "household", "age", "gender", "ethnicity", "global_adoption_rate", "time"]
+      output_vars: ["observation"]
+    
+    action:
+      function: "UpdateOpinions"
+      input_vars: ["observation"]
+      output_vars: ["new_opinions"]
+    
+    transition:
+      function: "ApplyOpinionUpdates"
+      input_vars: ["state", "new_opinions"]
+      output_vars: ["state"]
